@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ChatBotURL</title>
 
+    <!-- CSRF para JS -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/favicon.png">
 
@@ -345,6 +348,54 @@
             color: #2d3748;
         }
 
+        /* Markdown dentro de burbujas del bot */
+        .bot-bubble p { margin: 0 0 0.5rem; }
+        .bot-bubble p:last-child { margin-bottom: 0; }
+        .bot-bubble h1,.bot-bubble h2,.bot-bubble h3,
+        .bot-bubble h4,.bot-bubble h5,.bot-bubble h6 {
+            margin: 0.75rem 0 0.35rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1a2636;
+        }
+        .bot-bubble h1:first-child,.bot-bubble h2:first-child,
+        .bot-bubble h3:first-child { margin-top: 0; }
+        .bot-bubble ul,.bot-bubble ol {
+            margin: 0.25rem 0 0.5rem 1.25rem;
+            padding: 0;
+        }
+        .bot-bubble li { margin-bottom: 0.2rem; }
+        .bot-bubble pre {
+            background: #1e2736;
+            color: #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 0.85rem 1rem;
+            margin: 0.5rem 0;
+            overflow-x: auto;
+            font-size: 0.82rem;
+            line-height: 1.5;
+        }
+        .bot-bubble code {
+            background: #e2e9f3;
+            color: #2d4a70;
+            padding: 0.15em 0.4em;
+            border-radius: 0.3rem;
+            font-size: 0.85em;
+        }
+        .bot-bubble pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+        }
+        .bot-bubble blockquote {
+            border-left: 3px solid #7fa5d7;
+            margin: 0.5rem 0;
+            padding: 0.25rem 0.75rem;
+            color: #4a6280;
+        }
+        .bot-bubble strong { font-weight: 600; }
+        .bot-bubble hr { border-color: #cfd9e7; margin: 0.5rem 0; }
+
         .user-bubble {
             background-color: #2873b8;
             color: #fff;
@@ -477,16 +528,18 @@
         <div class="sidebar-history">
             <div class="history-section-label">Recientes</div>
 
-            {{-- Aquí se renderizará el historial dinámicamente --}}
             <div id="chatHistoryList">
-                {{-- Placeholder visual mientras no hay tabla conectada --}}
-                <div class="chat-history-item active">
-                    <i class="bi bi-chat-text"></i>
-                    <span class="history-item-text">Nueva conversación</span>
-                </div>
+                @forelse ($chats as $chat)
+                    <div class="chat-history-item" data-chat-id="{{ $chat->id }}">
+                        <i class="bi bi-chat-text"></i>
+                        <span class="history-item-text">{{ $chat->title }}</span>
+                    </div>
+                @empty
+                @endforelse
             </div>
 
-            <div id="historyEmpty" class="text-center py-4" style="color: rgba(255,255,255,0.35); font-size: 0.8rem; display: none;">
+            <div id="historyEmpty" class="text-center py-4"
+                    style="color: rgba(255,255,255,0.35); font-size: 0.8rem; {{ $chats->isEmpty() ? '' : 'display:none;' }}">
                 <i class="bi bi-clock-history d-block mb-1" style="font-size: 1.2rem;"></i>
                 Sin historial aún
             </div>
@@ -560,8 +613,11 @@
 <!-- Bootstrap 5 JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
+<!-- Marked.js (renderizar Markdown) -->
+<script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+
 <!-- Chat -->
-<script src="/js/chat.js?v={{ $version }}"></script>
+<script src="{{ asset('js/chat.js') }}?v={{ $version }}"></script>
 
 </body>
 </html>

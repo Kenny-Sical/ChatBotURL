@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Dashboard\ConversationController;
+use App\Http\Controllers\Dashboard\DashboardController;
 
 // Redirige la raíz al login
 Route::get('/', function () {
@@ -31,7 +33,10 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Chat y conversaciones
+    Route::post('/chat', [ConversationController::class, 'createConversation'])->name('chat.create');
+    Route::post('/chat/{chatId}/message', [ConversationController::class, 'storeMessage'])->name('chat.message');
+    Route::get('/chat/{chatId}/messages', [ConversationController::class, 'getMessages'])->name('chat.messages');
 });
