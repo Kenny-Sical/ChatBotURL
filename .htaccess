@@ -1,0 +1,8 @@
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Si ya viene con /public/ no reescribir
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L,QSA]
+</IfModule>
