@@ -33,7 +33,7 @@ class ConversationController extends Controller
      * Guarda el mensaje del usuario, llama a OpenAI de forma síncrona
      * y devuelve la respuesta del bot en la misma petición HTTP.
      */
-    public function storeMessage(Request $request, int $chatId): JsonResponse
+    public function storeMessage(Request $request, int $chatId, \App\Services\VertexAIService $aiService): JsonResponse
     {
         $chat = Chat::where('id', $chatId)
             ->where('user_id', Auth::id())
@@ -58,8 +58,22 @@ class ConversationController extends Controller
             ]);
         }
 
-        // Llamar a OpenAI de forma síncrona
-        $botMessage = $this->callOpenAI($chat->id);
+        // Llamar a IA de forma síncrona
+        $history = Conversation::where('chat_id', $chat->id)
+            ->orderBy('created_at')
+            ->get(['type', 'message'])
+            ->map(fn($c) => [
+                'role'    => $c->type,
+                'content' => $c->message,
+            ])
+            ->toArray();
+
+        try {
+            $botMessage = $aiService->generateContent($history);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Vertex AI error', ['chat_id' => $chatId, 'error' => $e->getMessage()]);
+            $botMessage = $e->getMessage();
+        }
 
         // Guardar respuesta del bot
         Conversation::create([
@@ -73,41 +87,6 @@ class ConversationController extends Controller
             'is_first'    => $isFirst,
             'bot_message' => $botMessage,
         ]);
-    }
-
-    private function callOpenAI(int $chatId): string
-    {
-        $history = Conversation::where('chat_id', $chatId)
-            ->orderBy('created_at')
-            ->get(['type', 'message'])
-            ->map(fn($c) => [
-                'role'    => $c->type === 'user' ? 'user' : 'assistant',
-                'content' => $c->message,
-            ])
-            ->toArray();
-
-        try {
-            $client = new Client(['timeout' => 55, 'verify' => false]);
-
-            $response = $client->post('https://api.openai.com/v1/chat/completions', [
-                'headers' => [
-                    'Authorization' => 'Bearer ' . config('services.openai.key'),
-                    'Content-Type'  => 'application/json',
-                ],
-                'json' => [
-                    'model'    => config('services.openai.model', 'gpt-4o-mini'),
-                    'messages' => $history,
-                ],
-            ]);
-
-            $data = json_decode($response->getBody()->getContents(), true);
-
-            return $data['choices'][0]['message']['content'] ?? 'No se pudo obtener una respuesta.';
-        } catch (\Throwable $e) {
-            Log::error('OpenAI error', ['chat_id' => $chatId, 'error' => $e->getMessage()]);
-
-            return 'Lo siento, ocurrió un error al consultar la IA. Intenta de nuevo.';
-        }
     }
 
     /**

@@ -20,9 +20,7 @@ class AIResponseReady implements ShouldBroadcast
         public readonly bool         $error = false
     ) {}
 
-    /**
-     * Canal privado por chat: solo el dueño del chat puede escuchar.
-     */
+    //Canal privado por chat: solo el dueño del chat puede escuchar.
     public function broadcastOn(): array
     {
         return [
@@ -30,17 +28,13 @@ class AIResponseReady implements ShouldBroadcast
         ];
     }
 
-    /**
-     * Nombre del evento que escuchará el frontend.
-     */
+    //Nombre del evento que escuchará el frontend.
     public function broadcastAs(): string
     {
         return 'ai.response.ready';
     }
 
-    /**
-     * Datos enviados al frontend.
-     */
+    //Datos enviados al frontend.
     public function broadcastWith(): array
     {
         return [

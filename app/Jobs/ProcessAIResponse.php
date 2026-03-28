@@ -25,14 +25,14 @@ class ProcessAIResponse implements ShouldQueue
         public readonly int $chatId
     ) {}
 
-    public function handle(): void
+    public function handle(\App\Services\VertexAIService $aiService): void
     {
         // Construir historial de la conversación para enviar contexto a la IA
         $history = Conversation::where('chat_id', $this->chatId)
             ->orderBy('created_at')
             ->get(['type', 'message'])
             ->map(fn($c) => [
-                'role'    => $c->type === 'user' ? 'user' : 'assistant',
+                'role'    => $c->type,
                 'content' => $c->message,
             ])
             ->toArray();
@@ -40,8 +40,8 @@ class ProcessAIResponse implements ShouldQueue
         // Clave de caché basada en el hash del historial completo
         $cacheKey = 'ai_response_' . md5(json_encode($history));
 
-        $responseText = Cache::remember($cacheKey, now()->addHour(), function () use ($history) {
-            return $this->callOpenAI($history);
+        $responseText = Cache::remember($cacheKey, now()->addHour(), function () use ($history, $aiService) {
+            return $aiService->generateContent($history);
         });
 
         // Guardar respuesta del bot en la base de datos
@@ -55,25 +55,7 @@ class ProcessAIResponse implements ShouldQueue
         broadcast(new AIResponseReady($this->chatId, $conversation))->toOthers();
     }
 
-    private function callOpenAI(array $messages): string
-    {
-        $client = new Client(['timeout' => 55]);
 
-        $response = $client->post('https://api.openai.com/v1/chat/completions', [
-            'headers' => [
-                'Authorization' => 'Bearer ' . config('services.openai.key'),
-                'Content-Type'  => 'application/json',
-            ],
-            'json' => [
-                'model'    => config('services.openai.model', 'gpt-4o-mini'),
-                'messages' => $messages,
-            ],
-        ]);
-
-        $data = json_decode($response->getBody()->getContents(), true);
-
-        return $data['choices'][0]['message']['content'] ?? 'No se pudo obtener una respuesta.';
-    }
 
     public function failed(\Throwable $exception): void
     {

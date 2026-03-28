@@ -35,9 +35,11 @@ return [
         ],
     ],
 
-    'openai' => [
-        'key'   => env('OPENAI_API_KEY'),
-        'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
+    'vertexai' => [
+        'project_id'   => env('VERTEX_AI_PROJECT_ID'),
+        'location'     => env('VERTEX_AI_LOCATION'),
+        'endpoint_id'  => env('VERTEX_AI_ENDPOINT_ID'),
+        'credentials'  => env('VERTEX_AI_CREDENTIALS', 'storage/app/private/google-credenciales.json'),
     ],
 
 ];
