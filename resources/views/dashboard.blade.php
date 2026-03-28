@@ -462,6 +462,37 @@
             background-color: #2369c6;
         }
 
+        .btn-voice {
+            background-color: transparent;
+            border: none;
+            color: #7fa5d7;
+            width: 36px;
+            height: 36px;
+            border-radius: 0.6rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+            transition: color 0.2s ease, background-color 0.2s ease;
+        }
+
+        .btn-voice:hover:not(:disabled) {
+            color: #2873b8;
+            background-color: rgba(40, 115, 184, 0.1);
+        }
+
+        .btn-voice.recording {
+            color: #dc3545;
+            animation: pulse-red 1.5s infinite;
+        }
+
+        @keyframes pulse-red {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 6px rgba(220, 53, 69, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+        }
+
         .btn-send:disabled {
             opacity: 0.45;
             cursor: not-allowed;
@@ -596,9 +627,12 @@
                 <textarea
                     id="chatInput"
                     rows="1"
-                    placeholder="Escribe tu mensaje…"
+                    placeholder="Escribe tu mensaje o usa el micrófono…"
                     disabled
                 ></textarea>
+                <button class="btn-voice" id="btnVoice" type="button" disabled title="Hablar / Detener grabación">
+                    <i class="bi bi-mic-fill"></i>
+                </button>
                 <button class="btn-send" id="btnSend" type="button" disabled title="Enviar">
                     <i class="bi bi-arrow-up"></i>
                 </button>

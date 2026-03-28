@@ -42,4 +42,8 @@ return [
         'credentials'  => env('VERTEX_AI_CREDENTIALS', 'storage/app/private/google-credenciales.json'),
     ],
 
+    'groq' => [
+        'key' => env('GROQ_API_KEY'),
+    ],
+
 ];

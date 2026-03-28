@@ -38,5 +38,6 @@ Route::middleware('auth')->group(function () {
     // Chat y conversaciones
     Route::post('/chat', [ConversationController::class, 'createConversation'])->name('chat.create');
     Route::post('/chat/{chatId}/message', [ConversationController::class, 'storeMessage'])->name('chat.message');
+    Route::post('/chat/{chatId}/voice-message', [ConversationController::class, 'storeVoiceMessage'])->name('chat.voice-message');
     Route::get('/chat/{chatId}/messages', [ConversationController::class, 'getMessages'])->name('chat.messages');
 });

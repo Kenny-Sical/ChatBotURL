@@ -10,6 +10,7 @@
     const chatEmpty     = document.getElementById('chatEmpty');
     const chatInput     = document.getElementById('chatInput');
     const btnSend       = document.getElementById('btnSend');
+    const btnVoice      = document.getElementById('btnVoice');
     const chatTitle     = document.getElementById('chatTitle');
     const historyList   = document.getElementById('chatHistoryList');
     const historyEmpty  = document.getElementById('historyEmpty');
@@ -153,12 +154,140 @@
             scrollToBottom();
             chatInput.disabled = false;
             chatInput.focus();
+
+            // SINTETIZAR VOZ
+            playTTS(res.bot_message);
         } catch {
             removeTypingIndicator();
             waitingForBot     = false;
             chatInput.disabled = false;
             showErrorBubble('Error al enviar el mensaje. Verifica tu conexión.');
         }
+    }
+
+    // ── Funciones de Voz (Grabación y Sintetizador) ────────────────────────────
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let isRecording = false;
+
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        btnVoice.addEventListener('click', async function() {
+            if (isRecording) {
+                // Detener grabación
+                mediaRecorder.stop();
+                btnVoice.classList.remove('recording');
+                isRecording = false;
+            } else {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    
+                    mediaRecorder.ondataavailable = e => {
+                        if (e.data.size > 0) audioChunks.push(e.data);
+                    };
+                    
+                    mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        stream.getTracks().forEach(track => track.stop());
+                        sendVoiceMessage(audioBlob);
+                    };
+                    
+                    mediaRecorder.start();
+                    btnVoice.classList.add('recording');
+                    isRecording = true;
+                } catch (err) {
+                    alert('No se pudo acceder al micrófono. Verifica los permisos.');
+                }
+            }
+        });
+    }
+
+    async function sendVoiceMessage(audioBlob) {
+        if (waitingForBot) return;
+
+        if (!activeChatId) {
+            await startNewChat();
+        }
+
+        chatEmpty.style.display = 'none';
+        chatInput.disabled     = true;
+        btnSend.disabled       = true;
+        btnVoice.disabled      = true;
+        waitingForBot          = true;
+
+        showTypingIndicator();
+        scrollToBottom();
+
+        const formData = new FormData();
+        formData.append('audio', audioBlob, 'voice.webm');
+
+        try {
+            const res = await fetch('/chat/' + activeChatId + '/voice-message', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': CSRF,
+                    'Accept': 'application/json',
+                },
+                body: formData
+            });
+
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+            
+            if (data.is_first) {
+                chatTitle.textContent = data.chat_title;
+                updateHistoryItemTitle(activeChatId, data.chat_title);
+            }
+
+            removeTypingIndicator();
+            waitingForBot = false;
+            
+            // Mostrar mensaje transcrito del usuario y respuesta de la IA
+            appendMessage('user', data.user_message);
+            appendMessage('bot', data.bot_message);
+            scrollToBottom();
+            
+            chatInput.disabled = false;
+            btnVoice.disabled = false;
+            chatInput.focus();
+
+            playTTS(data.bot_message);
+
+        } catch (err) {
+            removeTypingIndicator();
+            waitingForBot     = false;
+            chatInput.disabled = false;
+            btnVoice.disabled = false;
+            showErrorBubble(err);
+        }
+    }
+
+    let synth = window.speechSynthesis;
+    let text_to_speech = new SpeechSynthesisUtterance();
+    text_to_speech.lang = 'es-ES';
+    
+    // Cargar voces en español preferentemente
+    if (synth.onvoiceschanged !== undefined) {
+        synth.onvoiceschanged = () => {
+            const voices = synth.getVoices();
+            const spanishVoice = voices.find(v => v.lang.startsWith('es'));
+            if (spanishVoice) {
+                text_to_speech.voice = spanishVoice;
+            }
+        };
+    }
+
+    function playTTS(text) {
+        if (synth.speaking) {
+            synth.cancel();
+        }
+        
+        // Limpiar markdown básico para mejorar pronunciación
+        let cleanText = text.replace(/[*_#`~]/g, '');
+        
+        text_to_speech.text = cleanText;
+        synth.speak(text_to_speech);
     }
 
     // ── Helpers de UI ──────────────────────────────────────────────────────────
@@ -296,6 +425,7 @@
 
     // ── Al cargar: habilitar input de inmediato (el chat se crea al primer envío) ──
     chatInput.disabled = false;
+    btnVoice.disabled  = false;
     btnSend.disabled   = true;
 
 })();
