@@ -35,4 +35,15 @@ return [
         ],
     ],
 
+    'vertexai' => [
+        'project_id'   => env('VERTEX_AI_PROJECT_ID'),
+        'location'     => env('VERTEX_AI_LOCATION'),
+        'endpoint_id'  => env('VERTEX_AI_ENDPOINT_ID'),
+        'credentials'  => env('VERTEX_AI_CREDENTIALS', 'storage/app/private/google-credenciales.json'),
+    ],
+
+    'groq' => [
+        'key' => env('GROQ_API_KEY'),
+    ],
+
 ];
