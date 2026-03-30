@@ -505,6 +505,194 @@
             margin-top: 0.4rem;
         }
 
+        /* ── Voice Modal Premium ── */
+        .voice-modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.35s ease;
+        }
+
+        .voice-modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .voice-modal-content {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        .btn-close-voice {
+            position: absolute;
+            top: 2rem;
+            right: 2.5rem;
+            background: rgba(40, 115, 184, 0.1);
+            border: none;
+            color: #2873b8;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            z-index: 10000;
+        }
+
+        .btn-close-voice:hover {
+            background: rgba(40, 115, 184, 0.2);
+            transform: scale(1.05);
+        }
+
+        .voice-status-text {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2873b8;
+            margin-bottom: 4rem;
+            letter-spacing: -0.02em;
+            text-shadow: 0 2px 10px rgba(255,255,255,0.8);
+            transition: color 0.3s ease;
+            text-align: center;
+        }
+
+        .voice-mic-wrapper {
+            position: relative;
+            width: 160px;
+            height: 160px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .voice-mic-btn {
+            position: relative;
+            z-index: 10;
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2873b8 0%, #1a5288 100%);
+            border: none;
+            color: white;
+            font-size: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 25px rgba(40, 115, 184, 0.4);
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s, box-shadow 0.3s;
+        }
+
+        .voice-mic-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 15px 35px rgba(40, 115, 184, 0.5);
+        }
+
+        .voice-mic-btn:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+
+        .voice-mic-btn:disabled {
+            cursor: not-allowed;
+        }
+
+        /* Anillos de animación */
+        .voice-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            background: rgba(220, 53, 69, 0.15); /* Rojo por defecto (grabando) */
+            z-index: 1;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Estado: Grabando (Rojo pulsante) */
+        .voice-mic-wrapper.recording .voice-mic-btn {
+            background: linear-gradient(135deg, #dc3545 0%, #a71d2a 100%);
+            box-shadow: 0 10px 25px rgba(220, 53, 69, 0.4);
+        }
+        
+        .voice-modal-overlay.recording .voice-status-text {
+            color: #dc3545;
+        }
+
+        .voice-mic-wrapper.recording .voice-ring {
+            background: rgba(220, 53, 69, 0.15);
+            animation: ripple 2s cubic-bezier(0.19, 1, 0.22, 1) infinite;
+        }
+        
+        .voice-mic-wrapper.recording .ring-1 { animation-delay: 0s; }
+        .voice-mic-wrapper.recording .ring-2 { animation-delay: 0.6s; }
+        .voice-mic-wrapper.recording .ring-3 { animation-delay: 1.2s; }
+
+        /* Estado: Procesando (Pulsación Azul Suave) */
+        .voice-mic-wrapper.processing .voice-mic-btn {
+            background: linear-gradient(135deg, #7fa5d7 0%, #4a6280 100%);
+            animation: gentle-pulse 1.5s infinite alternate;
+        }
+        .voice-modal-overlay.processing .voice-status-text {
+            color: #4a6280;
+        }
+
+        /* Estado: Respondiendo (Hablando bot = Púrpura/Azul vibrante tipo Iris) */
+        .voice-mic-wrapper.speaking .voice-mic-btn {
+            background: linear-gradient(135deg, #6f42c1 0%, #0d6efd 100%);
+            box-shadow: 0 0 35px rgba(111, 66, 193, 0.6);
+        }
+        .voice-modal-overlay.speaking .voice-status-text {
+            color: #6f42c1;
+        }
+        
+        .voice-mic-wrapper.speaking .voice-ring {
+            background: rgba(111, 66, 193, 0.2);
+            animation: ripple-fast 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+        }
+        .voice-mic-wrapper.speaking .ring-1 { animation-delay: 0s; }
+        .voice-mic-wrapper.speaking .ring-2 { animation-delay: 0.3s; }
+        .voice-mic-wrapper.speaking .ring-3 { animation-delay: 0.6s; }
+
+        .voice-help-text {
+            margin-top: 4rem;
+            color: #7fa5d7;
+            font-size: 1.05rem;
+            font-weight: 500;
+        }
+
+        @keyframes ripple {
+            0% { width: 110px; height: 110px; opacity: 1; border: 2px solid transparent; }
+            100% { width: 380px; height: 380px; opacity: 0; border: 2px solid rgba(220, 53, 69, 0.5); }
+        }
+
+        @keyframes ripple-fast {
+            0% { width: 110px; height: 110px; opacity: 1; border: 2px solid transparent; }
+            100% { width: 280px; height: 280px; opacity: 0; border: 2px solid rgba(111, 66, 193, 0.6); }
+        }
+
+        @keyframes gentle-pulse {
+            0% { transform: scale(1); opacity: 0.9; box-shadow: 0 0 10px rgba(127, 165, 215, 0.5); }
+            100% { transform: scale(1.03); opacity: 1; box-shadow: 0 0 25px rgba(127, 165, 215, 0.8); }
+        }
+
         /* ── Responsivo ── */
         @media (max-width: 767.98px) {
             #sidebar {
@@ -641,6 +829,25 @@
         </div>
 
     </main>
+
+    <!-- Voice Modal Overlay -->
+    <div id="voiceModal" class="voice-modal-overlay">
+        <div class="voice-modal-content">
+            <button id="btnCloseVoice" class="btn-close-voice" title="Cerrar"><i class="bi bi-x-lg"></i></button>
+            <div class="voice-status-text" id="voiceStatusText">Te escucho...</div>
+            
+            <div class="voice-mic-wrapper" id="voiceMicWrapper">
+                <button class="voice-mic-btn" id="btnBigMic">
+                    <i class="bi bi-mic-fill" id="bigMicIcon"></i>
+                </button>
+                <div class="voice-ring ring-1"></div>
+                <div class="voice-ring ring-2"></div>
+                <div class="voice-ring ring-3"></div>
+            </div>
+            
+            <div class="voice-help-text" id="voiceHelpText">Toca el micrófono para detener</div>
+        </div>
+    </div>
 
 </div>
 

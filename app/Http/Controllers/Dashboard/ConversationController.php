@@ -133,7 +133,7 @@ class ConversationController extends Controller
             ->toArray();
 
         try {
-            $botMessage = $aiService->generateContent($history);
+            $botMessage = $aiService->generateContent($history, true);
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('Vertex AI error on Voice', ['chat_id' => $chatId, 'error' => $e->getMessage()]);
             $botMessage = 'Lo siento, ocurrió un error al consultar la IA. Intenta de nuevo.';

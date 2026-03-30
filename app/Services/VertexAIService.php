@@ -48,9 +48,10 @@ class VertexAIService
      * Llama al modelo fine-tuned en Vertex AI
      *
      * @param array $messages El historial de mensajes
+     * @param bool $isVoice Indica si la solicitud viene de una conversación por voz
      * @return string La respuesta del asistente
      */
-    public function generateContent(array $messages): string
+    public function generateContent(array $messages, bool $isVoice = false): string
     {
         $token = $this->getAuthToken();
         
@@ -66,7 +67,21 @@ class VertexAIService
             ];
         }
 
-        $systemInstruction = "Eres un asistente educativo especializado en fundamentos de programación. Tu función es ayudar a los estudiantes a comprender conceptos, resolver dudas y proporcionar pseudocódigo cuando sea necesario. NUNCA debes proporcionar código en ningún lenguaje de programación bajo ninguna circunstancia.";
+        // Reforzar la instrucción en el último mensaje para vencer el "few-shot learning" del historial
+        if (!empty($contents)) {
+            $lastIndex = count($contents) - 1;
+            if ($isVoice) {
+                $contents[$lastIndex]['parts'][0]['text'] .= "\n\n[NOTA AL ASISTENTE: Proporciona la respuesta a esto último de forma MUY concisa y narrada, sin código y sin viñetas, ya que será leída en voz alta.]";
+            } else {
+                $contents[$lastIndex]['parts'][0]['text'] .= "\n\n[NOTA AL ASISTENTE: Puedes responder con pseudocódigo estructurado, listas y formato markdown detallado según sea necesario.]";
+            }
+        }
+
+        if ($isVoice) {
+            $systemInstruction = "Eres un asistente educativo de voz especializado en fundamentos de programación. Tu función es explicar conceptos y resolver dudas de manera concisa, clara y fácil de escuchar. NUNCA proporciones código real en ningún lenguaje bajo ninguna circunstancia. Dado que tus respuestas se leerán en una llamada de voz, evita los bloques largos de texto. Si es estrictamente necesario ilustrar una lógica, usa 'pseudocódigo narrado' de máximo 2 o 3 oraciones en lenguaje natural (ejemplo: 'si la condición se cumple, entonces haz esto, de lo contrario, haz aquello'). No uses símbolos, viñetas, ni estructuras visuales complejas.";
+        } else {
+            $systemInstruction = "Eres un asistente educativo especializado en fundamentos de programación. Tu función es ayudar a los estudiantes a comprender conceptos, resolver dudas y proporcionar pseudocódigo cuando sea necesario. NUNCA debes proporcionar código en ningún lenguaje de programación bajo ninguna circunstancia.";
+        }
 
         $url = "https://{$this->location}-aiplatform.googleapis.com/v1/projects/{$this->projectId}/locations/{$this->location}/endpoints/{$this->endpointId}:generateContent";
 

@@ -15,6 +15,14 @@
     const historyList   = document.getElementById('chatHistoryList');
     const historyEmpty  = document.getElementById('historyEmpty');
 
+    const voiceModal      = document.getElementById('voiceModal');
+    const btnCloseVoice   = document.getElementById('btnCloseVoice');
+    const btnBigMic       = document.getElementById('btnBigMic');
+    const voiceMicWrapper = document.getElementById('voiceMicWrapper');
+    const voiceStatusText = document.getElementById('voiceStatusText');
+    const voiceHelpText   = document.getElementById('voiceHelpText');
+    const bigMicIcon      = document.getElementById('bigMicIcon');
+
     const CSRF  = document.querySelector('meta[name="csrf-token"]').content;
 
     // ── Estado de la sesión ────────────────────────────────────────────────────
@@ -154,9 +162,6 @@
             scrollToBottom();
             chatInput.disabled = false;
             chatInput.focus();
-
-            // SINTETIZAR VOZ
-            playTTS(res.bot_message);
         } catch {
             removeTypingIndicator();
             waitingForBot     = false;
@@ -165,18 +170,68 @@
         }
     }
 
-    // ── Funciones de Voz (Grabación y Sintetizador) ────────────────────────────
+    // ── Funciones de Voz (Grabación y Sintetizador Modal) ──────────────────────
     let mediaRecorder = null;
     let audioChunks = [];
     let isRecording = false;
+    let isModalOpen = false;
+
+    function openVoiceModal() {
+        if (!voiceModal) return;
+        voiceModal.classList.add('active');
+        isModalOpen = true;
+        resetModalUI();
+    }
+
+    function closeVoiceModal() {
+        if (!voiceModal) return;
+        voiceModal.classList.remove('active');
+        isModalOpen = false;
+        
+        if (isRecording) {
+            mediaRecorder.stop();
+            isRecording = false;
+        }
+        if (synth.speaking) {
+            synth.cancel();
+        }
+    }
+
+    function resetModalUI() {
+        voiceModal.classList.remove('recording', 'processing', 'speaking');
+        voiceMicWrapper.classList.remove('recording', 'processing', 'speaking');
+        voiceStatusText.textContent = 'Pulsa para hablar';
+        voiceHelpText.textContent = 'Toca el micrófono para iniciar grabación';
+        btnBigMic.disabled = false;
+        bigMicIcon.className = 'bi bi-mic-fill';
+    }
+
+    if (btnCloseVoice) {
+        btnCloseVoice.addEventListener('click', closeVoiceModal);
+    }
 
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        btnVoice.addEventListener('click', async function() {
+        // Botón pequeño abre el modal
+        btnVoice.addEventListener('click', function() {
+            openVoiceModal();
+        });
+
+        // Botón gigante dentro del modal
+        btnBigMic.addEventListener('click', async function() {
             if (isRecording) {
-                // Detener grabación
+                // Detener grabación y procesar
                 mediaRecorder.stop();
-                btnVoice.classList.remove('recording');
                 isRecording = false;
+
+                // UI Processing
+                voiceModal.classList.remove('recording');
+                voiceMicWrapper.classList.remove('recording');
+                voiceModal.classList.add('processing');
+                voiceMicWrapper.classList.add('processing');
+                voiceStatusText.textContent = 'Pensando...';
+                voiceHelpText.textContent = 'Espera un momento';
+                btnBigMic.disabled = true;
+                bigMicIcon.className = 'bi bi-hourglass-split';
             } else {
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -188,14 +243,24 @@
                     };
                     
                     mediaRecorder.onstop = () => {
-                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        if (isModalOpen && audioChunks.length > 0) {
+                            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                            sendVoiceMessage(audioBlob);
+                        }
                         stream.getTracks().forEach(track => track.stop());
-                        sendVoiceMessage(audioBlob);
                     };
                     
                     mediaRecorder.start();
-                    btnVoice.classList.add('recording');
                     isRecording = true;
+
+                    // UI Recording
+                    voiceModal.classList.remove('processing', 'speaking');
+                    voiceMicWrapper.classList.remove('processing', 'speaking');
+                    voiceModal.classList.add('recording');
+                    voiceMicWrapper.classList.add('recording');
+                    voiceStatusText.textContent = 'Te escucho...';
+                    voiceHelpText.textContent = 'Toca de nuevo para enviar mensaje';
+                    bigMicIcon.className = 'bi bi-stop-fill';
                 } catch (err) {
                     alert('No se pudo acceder al micrófono. Verifica los permisos.');
                 }
@@ -243,7 +308,6 @@
             removeTypingIndicator();
             waitingForBot = false;
             
-            // Mostrar mensaje transcrito del usuario y respuesta de la IA
             appendMessage('user', data.user_message);
             appendMessage('bot', data.bot_message);
             scrollToBottom();
@@ -259,7 +323,12 @@
             waitingForBot     = false;
             chatInput.disabled = false;
             btnVoice.disabled = false;
-            showErrorBubble(err);
+            
+            if (isModalOpen) {
+                resetModalUI();
+                voiceStatusText.textContent = 'Ocurrió un error';
+            }
+            showErrorBubble('Error al enviar el mensaje de voz. Asegúrate de grabar con volumen.');
         }
     }
 
@@ -278,14 +347,38 @@
         };
     }
 
+    // Eventos TTS para Modal
+    text_to_speech.onstart = () => {
+        if (isModalOpen) {
+            voiceModal.classList.remove('processing', 'recording');
+            voiceMicWrapper.classList.remove('processing', 'recording');
+            voiceModal.classList.add('speaking');
+            voiceMicWrapper.classList.add('speaking');
+            voiceStatusText.textContent = 'Respondiendo...';
+            voiceHelpText.textContent = 'Escuchando respuesta de IA';
+            btnBigMic.disabled = true;
+            bigMicIcon.className = 'bi bi-soundwave';
+        }
+    };
+
+    text_to_speech.onend = () => {
+        if (isModalOpen) {
+            resetModalUI();
+        }
+    };
+
+    text_to_speech.onerror = () => {
+        if (isModalOpen) {
+            resetModalUI();
+        }
+    };
+
     function playTTS(text) {
         if (synth.speaking) {
             synth.cancel();
         }
         
-        // Limpiar markdown básico para mejorar pronunciación
         let cleanText = text.replace(/[*_#`~]/g, '');
-        
         text_to_speech.text = cleanText;
         synth.speak(text_to_speech);
     }
