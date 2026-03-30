@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ChatBotURL</title>
 
+    <!-- CSRF para JS -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/favicon.png">
 
@@ -345,6 +348,54 @@
             color: #2d3748;
         }
 
+        /* Markdown dentro de burbujas del bot */
+        .bot-bubble p { margin: 0 0 0.5rem; }
+        .bot-bubble p:last-child { margin-bottom: 0; }
+        .bot-bubble h1,.bot-bubble h2,.bot-bubble h3,
+        .bot-bubble h4,.bot-bubble h5,.bot-bubble h6 {
+            margin: 0.75rem 0 0.35rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1a2636;
+        }
+        .bot-bubble h1:first-child,.bot-bubble h2:first-child,
+        .bot-bubble h3:first-child { margin-top: 0; }
+        .bot-bubble ul,.bot-bubble ol {
+            margin: 0.25rem 0 0.5rem 1.25rem;
+            padding: 0;
+        }
+        .bot-bubble li { margin-bottom: 0.2rem; }
+        .bot-bubble pre {
+            background: #1e2736;
+            color: #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 0.85rem 1rem;
+            margin: 0.5rem 0;
+            overflow-x: auto;
+            font-size: 0.82rem;
+            line-height: 1.5;
+        }
+        .bot-bubble code {
+            background: #e2e9f3;
+            color: #2d4a70;
+            padding: 0.15em 0.4em;
+            border-radius: 0.3rem;
+            font-size: 0.85em;
+        }
+        .bot-bubble pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+        }
+        .bot-bubble blockquote {
+            border-left: 3px solid #7fa5d7;
+            margin: 0.5rem 0;
+            padding: 0.25rem 0.75rem;
+            color: #4a6280;
+        }
+        .bot-bubble strong { font-weight: 600; }
+        .bot-bubble hr { border-color: #cfd9e7; margin: 0.5rem 0; }
+
         .user-bubble {
             background-color: #2873b8;
             color: #fff;
@@ -411,6 +462,37 @@
             background-color: #2369c6;
         }
 
+        .btn-voice {
+            background-color: transparent;
+            border: none;
+            color: #7fa5d7;
+            width: 36px;
+            height: 36px;
+            border-radius: 0.6rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+            transition: color 0.2s ease, background-color 0.2s ease;
+        }
+
+        .btn-voice:hover:not(:disabled) {
+            color: #2873b8;
+            background-color: rgba(40, 115, 184, 0.1);
+        }
+
+        .btn-voice.recording {
+            color: #dc3545;
+            animation: pulse-red 1.5s infinite;
+        }
+
+        @keyframes pulse-red {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 6px rgba(220, 53, 69, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+        }
+
         .btn-send:disabled {
             opacity: 0.45;
             cursor: not-allowed;
@@ -421,6 +503,194 @@
             color: #a0b4cc;
             text-align: center;
             margin-top: 0.4rem;
+        }
+
+        /* ── Voice Modal Premium ── */
+        .voice-modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.35s ease;
+        }
+
+        .voice-modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .voice-modal-content {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        .btn-close-voice {
+            position: absolute;
+            top: 2rem;
+            right: 2.5rem;
+            background: rgba(40, 115, 184, 0.1);
+            border: none;
+            color: #2873b8;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            z-index: 10000;
+        }
+
+        .btn-close-voice:hover {
+            background: rgba(40, 115, 184, 0.2);
+            transform: scale(1.05);
+        }
+
+        .voice-status-text {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2873b8;
+            margin-bottom: 4rem;
+            letter-spacing: -0.02em;
+            text-shadow: 0 2px 10px rgba(255,255,255,0.8);
+            transition: color 0.3s ease;
+            text-align: center;
+        }
+
+        .voice-mic-wrapper {
+            position: relative;
+            width: 160px;
+            height: 160px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .voice-mic-btn {
+            position: relative;
+            z-index: 10;
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2873b8 0%, #1a5288 100%);
+            border: none;
+            color: white;
+            font-size: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 25px rgba(40, 115, 184, 0.4);
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s, box-shadow 0.3s;
+        }
+
+        .voice-mic-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 15px 35px rgba(40, 115, 184, 0.5);
+        }
+
+        .voice-mic-btn:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+
+        .voice-mic-btn:disabled {
+            cursor: not-allowed;
+        }
+
+        /* Anillos de animación */
+        .voice-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            background: rgba(220, 53, 69, 0.15); /* Rojo por defecto (grabando) */
+            z-index: 1;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Estado: Grabando (Rojo pulsante) */
+        .voice-mic-wrapper.recording .voice-mic-btn {
+            background: linear-gradient(135deg, #dc3545 0%, #a71d2a 100%);
+            box-shadow: 0 10px 25px rgba(220, 53, 69, 0.4);
+        }
+        
+        .voice-modal-overlay.recording .voice-status-text {
+            color: #dc3545;
+        }
+
+        .voice-mic-wrapper.recording .voice-ring {
+            background: rgba(220, 53, 69, 0.15);
+            animation: ripple 2s cubic-bezier(0.19, 1, 0.22, 1) infinite;
+        }
+        
+        .voice-mic-wrapper.recording .ring-1 { animation-delay: 0s; }
+        .voice-mic-wrapper.recording .ring-2 { animation-delay: 0.6s; }
+        .voice-mic-wrapper.recording .ring-3 { animation-delay: 1.2s; }
+
+        /* Estado: Procesando (Pulsación Azul Suave) */
+        .voice-mic-wrapper.processing .voice-mic-btn {
+            background: linear-gradient(135deg, #7fa5d7 0%, #4a6280 100%);
+            animation: gentle-pulse 1.5s infinite alternate;
+        }
+        .voice-modal-overlay.processing .voice-status-text {
+            color: #4a6280;
+        }
+
+        /* Estado: Respondiendo (Hablando bot = Púrpura/Azul vibrante tipo Iris) */
+        .voice-mic-wrapper.speaking .voice-mic-btn {
+            background: linear-gradient(135deg, #6f42c1 0%, #0d6efd 100%);
+            box-shadow: 0 0 35px rgba(111, 66, 193, 0.6);
+        }
+        .voice-modal-overlay.speaking .voice-status-text {
+            color: #6f42c1;
+        }
+        
+        .voice-mic-wrapper.speaking .voice-ring {
+            background: rgba(111, 66, 193, 0.2);
+            animation: ripple-fast 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+        }
+        .voice-mic-wrapper.speaking .ring-1 { animation-delay: 0s; }
+        .voice-mic-wrapper.speaking .ring-2 { animation-delay: 0.3s; }
+        .voice-mic-wrapper.speaking .ring-3 { animation-delay: 0.6s; }
+
+        .voice-help-text {
+            margin-top: 4rem;
+            color: #7fa5d7;
+            font-size: 1.05rem;
+            font-weight: 500;
+        }
+
+        @keyframes ripple {
+            0% { width: 110px; height: 110px; opacity: 1; border: 2px solid transparent; }
+            100% { width: 380px; height: 380px; opacity: 0; border: 2px solid rgba(220, 53, 69, 0.5); }
+        }
+
+        @keyframes ripple-fast {
+            0% { width: 110px; height: 110px; opacity: 1; border: 2px solid transparent; }
+            100% { width: 280px; height: 280px; opacity: 0; border: 2px solid rgba(111, 66, 193, 0.6); }
+        }
+
+        @keyframes gentle-pulse {
+            0% { transform: scale(1); opacity: 0.9; box-shadow: 0 0 10px rgba(127, 165, 215, 0.5); }
+            100% { transform: scale(1.03); opacity: 1; box-shadow: 0 0 25px rgba(127, 165, 215, 0.8); }
         }
 
         /* ── Responsivo ── */
@@ -477,16 +747,18 @@
         <div class="sidebar-history">
             <div class="history-section-label">Recientes</div>
 
-            {{-- Aquí se renderizará el historial dinámicamente --}}
             <div id="chatHistoryList">
-                {{-- Placeholder visual mientras no hay tabla conectada --}}
-                <div class="chat-history-item active">
-                    <i class="bi bi-chat-text"></i>
-                    <span class="history-item-text">Nueva conversación</span>
-                </div>
+                @forelse ($chats as $chat)
+                    <div class="chat-history-item" data-chat-id="{{ $chat->id }}">
+                        <i class="bi bi-chat-text"></i>
+                        <span class="history-item-text">{{ $chat->title }}</span>
+                    </div>
+                @empty
+                @endforelse
             </div>
 
-            <div id="historyEmpty" class="text-center py-4" style="color: rgba(255,255,255,0.35); font-size: 0.8rem; display: none;">
+            <div id="historyEmpty" class="text-center py-4"
+                    style="color: rgba(255,255,255,0.35); font-size: 0.8rem; {{ $chats->isEmpty() ? '' : 'display:none;' }}">
                 <i class="bi bi-clock-history d-block mb-1" style="font-size: 1.2rem;"></i>
                 Sin historial aún
             </div>
@@ -543,9 +815,12 @@
                 <textarea
                     id="chatInput"
                     rows="1"
-                    placeholder="Escribe tu mensaje…"
+                    placeholder="Escribe tu mensaje o usa el micrófono…"
                     disabled
                 ></textarea>
+                <button class="btn-voice" id="btnVoice" type="button" disabled title="Hablar / Detener grabación">
+                    <i class="bi bi-mic-fill"></i>
+                </button>
                 <button class="btn-send" id="btnSend" type="button" disabled title="Enviar">
                     <i class="bi bi-arrow-up"></i>
                 </button>
@@ -555,13 +830,35 @@
 
     </main>
 
+    <!-- Voice Modal Overlay -->
+    <div id="voiceModal" class="voice-modal-overlay">
+        <div class="voice-modal-content">
+            <button id="btnCloseVoice" class="btn-close-voice" title="Cerrar"><i class="bi bi-x-lg"></i></button>
+            <div class="voice-status-text" id="voiceStatusText">Te escucho...</div>
+            
+            <div class="voice-mic-wrapper" id="voiceMicWrapper">
+                <button class="voice-mic-btn" id="btnBigMic">
+                    <i class="bi bi-mic-fill" id="bigMicIcon"></i>
+                </button>
+                <div class="voice-ring ring-1"></div>
+                <div class="voice-ring ring-2"></div>
+                <div class="voice-ring ring-3"></div>
+            </div>
+            
+            <div class="voice-help-text" id="voiceHelpText">Toca el micrófono para detener</div>
+        </div>
+    </div>
+
 </div>
 
 <!-- Bootstrap 5 JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
+<!-- Marked.js (renderizar Markdown) -->
+<script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+
 <!-- Chat -->
-<script src="/js/chat.js?v={{ $version }}"></script>
+<script src="{{ asset('js/chat.js') }}?v={{ $version }}"></script>
 
 </body>
 </html>
