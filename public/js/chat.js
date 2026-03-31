@@ -521,4 +521,9 @@
     btnVoice.disabled  = false;
     btnSend.disabled   = true;
 
+    // Colapsar sidebar en móviles por defecto
+    if (isMobile()) {
+        sidebar.classList.add('collapsed');
+    }
+
 })();
