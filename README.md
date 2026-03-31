@@ -1,59 +1,102 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+<div align="center">
+  <img src="public/favicon.png" alt="ChatBot IA Logo" width="100" />
+  <h1>ChatBot Educativo Inmersivo con IA</h1>
+  <p>
+    Una plataforma de asistencia educativa construida con <strong>Laravel</strong> que combina capacidades conversacionales avanzadas de LLMs generativos y un sistema integral de notas de voz en tiempo real.
+  </p>
+</div>
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+---
 
-## About Laravel
+## ✨ Características Principales
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- 🤖 **Motor de Inteligencia Artificial Avanzado**: Integrado nativamente con los modelos fine-tuned de **Google Vertex AI** (`gemini-2.5-flash-lite`).
+- 🎙️ **Interacción por Voz Real**: Conversa con tu asistente sin tocar el teclado.
+    - Capta audio en vivo y utiliza **Groq API (Whisper)** para una transcripción increíblemente veloz.
+    - El asistente te responderá de vuelta y de viva voz usando **Web Speech API**.
+- 🖥️ **Interfaz Inmersiva "Premium"**: Implementa principios de _Glassmorphism_ y modales responsivos con latidos fluidos para representar el estado del procesamiento cognitivo (Escuchando > Pensando > Hablando).
+- 🧩 **Conciencia de Contexto Asertiva (Few-Shot Bypass)**: Entiende la diferencia en tu estilo de interacción. Si escribes por chat, arrojará ejemplos ricos y Markdown de pseudocódigo. Si le hablas, te contestará de forma directa, corta y amigable al oído.
+- 📱 **100% Responsivo**: Diseñado para móviles y pantallas grandes con un panel lateral colapsable nativo.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 🛠️ Tecnologías Empleadas
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **Framework Backend:** Laravel 10/11 (PHP 8.2+)
+- **Base de Datos:** MySQL / MariaDB
+- **Inteligencia Artificial LLM:** Google Vertex AI API (Google Cloud Platform)
+- **Motor STT (Voice to Text):** Groq Whisper-large-v3
+- **Motor TTS (Text to Voice):** Navegador Nativo (SpeechSynthesis)
+- **Frontend UI:** Blade, Bootstrap 5, Markdown.js, Vanilla CSS & JS.
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## ⚙️ Requisitos Previos
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Antes de instalar este proyecto en tu entorno local, asegúrate de tener instalado:
 
-## Laravel Sponsors
+- PHP >= 8.1
+- Composer
+- Base de datos MySQL o MariaDB
+- Una cuenta en [Groq Cloud](https://console.groq.com/keys)
+- Una cuenta de Servicio en [Google Cloud Platform](https://console.cloud.google.com/) con permisos para Vertex AI.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+---
 
-### Premium Partners
+## 🚀 Instalación Rápida Local
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+Sigue estos pasos para arrancar el ChatBot IA en tu propio ordenador:
 
-## Contributing
+1. **Clona y entra en el proyecto:**
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+    ```bash
+    git clone https://ruta-del-repositorio/chatbot.git
+    cd chatbot
+    ```
 
-## Code of Conduct
+2. **Instala las Dependencias de PHP:**
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+    ```bash
+    composer install
+    ```
 
-## Security Vulnerabilities
+3. **Configura tus Variables de Entorno (`.env`):**
+    - Renombra el archivo `.env.example` a `.env`.
+    - Modifica tus configuraciones de base de datos (`DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`).
+    - Añade tus claves API en la parte inferior:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+    ```ini
+    VERTEX_AI_PROJECT_ID=tu-id-de-proyecto
+    VERTEX_AI_LOCATION=us-east1
+    VERTEX_AI_ENDPOINT_ID=tu-endpoint-fine-tunned
+    VERTEX_AI_CREDENTIALS=storage/app/private/google-credenciales.json
 
-## License
+    GROQ_API_KEY=tu-api-key-de-groq
+    ```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+4. **Guarda el Archivo de Cuenta de Google Vertex:**
+   Descarga el archivo estricto JSON de servicio desde Google Cloud, nómbralo `google-credenciales.json` y colócalo exactamente en esta ruta local para máxima seguridad:
+   `storage/app/private/google-credenciales.json`
+
+5. **Genera la Clave de Aplicación y Base de datos:**
+
+    ```bash
+    php artisan key:generate
+    php artisan migrate
+    ```
+
+6. **Despliega el Servidor Integrado:**
+    ```bash
+    php artisan serve
+    ```
+    Entra a `http://localhost:8000` y regístrate para empezar a debatir en tu primera conversación inteligente.
+
+---
+
+## Despliegue a Producción
+
+La plataforma de notas de voz en este proyecto requiere estrictamente una conexión segura SSL (`https://`) para poder operar, debido a las políticas de seguridad en los navegadores para capturar el micrófono. Te recomendamos leer la [Guía Completa de Despliegue Incluida (`DEPLOYMENT_CLOUD_PANEL.md`)](./DEPLOYMENT_CLOUD_PANEL.md) donde detallamos cómo subir esto a DigitalOcean mediante CloudPanel.
+
+---
+
+## Licencia
+
+Este es un proyecto privativo y educativo desarrollado en colaboración autónoma mediante las directrices de diseño de Arquitectura en Tiempo Real. Las licencias de las APIs de Google Vertex y Groq dependen de los TOS dictaminados por sus propietarios.
