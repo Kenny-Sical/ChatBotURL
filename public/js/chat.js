@@ -210,14 +210,29 @@
         btnCloseVoice.addEventListener('click', closeVoiceModal);
     }
 
+    // ── Workaround para desbloquear SpeechSynthesis en iOS/Safari ──
+    function unlockIOSAudio() {
+        if (synth && synth.speak) {
+            let unlockUtterance = new SpeechSynthesisUtterance('');
+            unlockUtterance.volume = 0;
+            unlockUtterance.rate = 1;
+            unlockUtterance.pitch = 1;
+            synth.speak(unlockUtterance);
+            // Reanudar por precaución en algunos navegadores
+            if (synth.resume) synth.resume();
+        }
+    }
+
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         // Botón pequeño abre el modal
         btnVoice.addEventListener('click', function() {
+            unlockIOSAudio();
             openVoiceModal();
         });
 
         // Botón gigante dentro del modal
         btnBigMic.addEventListener('click', async function() {
+            unlockIOSAudio();
             if (isRecording) {
                 // Detener grabación y procesar
                 mediaRecorder.stop();
