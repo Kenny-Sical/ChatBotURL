@@ -27,9 +27,9 @@ class ConversationController extends Controller
         ], 201);
     }
 
-    //Guarda el mensaje del usuario, llama a Gemini de forma síncrona
+    //Guarda el mensaje del usuario, llama a Gemini u OpenAI de forma síncrona
     // y devuelve la respuesta del bot en la misma petición HTTP.
-    public function storeMessage(Request $request, int $chatId, \App\Services\VertexAIService $aiService): JsonResponse
+    public function storeMessage(Request $request, int $chatId): JsonResponse
     {
         $chat = Chat::where('id', $chatId)
             ->where('user_id', Auth::id())
@@ -65,9 +65,14 @@ class ConversationController extends Controller
             ->toArray();
 
         try {
+            $modelType = $request->input('model', 'vertex');
+            $aiService = $modelType === 'openai' 
+                ? app(\App\Services\OpenAIService::class) 
+                : app(\App\Services\VertexAIService::class);
+
             $botMessage = $aiService->generateContent($history);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Vertex AI error', ['chat_id' => $chatId, 'error' => $e->getMessage()]);
+            \Illuminate\Support\Facades\Log::error('AI Service error', ['chat_id' => $chatId, 'error' => $e->getMessage()]);
             $botMessage = $e->getMessage();
         }
 
@@ -85,8 +90,8 @@ class ConversationController extends Controller
         ]);
     }
 
-    //Recibe un archivo de audio, lo transcribe con Groq, y llama a Gemini
-    public function storeVoiceMessage(Request $request, int $chatId, \App\Services\GroqService $groqService, \App\Services\VertexAIService $aiService): JsonResponse
+    //Recibe un archivo de audio, lo transcribe con Groq, y llama a la IA seleccionada
+    public function storeVoiceMessage(Request $request, int $chatId, \App\Services\GroqService $groqService): JsonResponse
     {
         $chat = Chat::where('id', $chatId)
             ->where('user_id', Auth::id())
@@ -133,9 +138,14 @@ class ConversationController extends Controller
             ->toArray();
 
         try {
+            $modelType = $request->input('model', 'vertex');
+            $aiService = $modelType === 'openai' 
+                ? app(\App\Services\OpenAIService::class) 
+                : app(\App\Services\VertexAIService::class);
+
             $botMessage = $aiService->generateContent($history, true);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Vertex AI error on Voice', ['chat_id' => $chatId, 'error' => $e->getMessage()]);
+            \Illuminate\Support\Facades\Log::error('AI Service error on Voice', ['chat_id' => $chatId, 'error' => $e->getMessage()]);
             $botMessage = 'Lo siento, ocurrió un error al consultar la IA. Intenta de nuevo.';
         }
 
