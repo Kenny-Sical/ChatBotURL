@@ -796,6 +796,11 @@
                 <i class="bi bi-layout-sidebar"></i>
             </button>
             <span class="chat-topbar-title" id="chatTitle">Nueva conversación</span>
+            
+            <select id="modelSelector" class="form-select form-select-sm" style="width: auto; max-width: 180px; font-size: 0.8rem; border-radius: 0.5rem; border-color: #cfd9e7; color: #2873b8; font-weight: 500;">
+                <option value="vertex" selected>Google Vertex AI</option>
+                <option value="openai">OpenAI</option>
+            </select>
         </div>
 
         <!-- Zona de mensajes -->
