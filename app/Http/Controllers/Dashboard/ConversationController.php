@@ -73,7 +73,12 @@ class ConversationController extends Controller
             $botMessage = $aiService->generateContent($history);
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('AI Service error', ['chat_id' => $chatId, 'error' => $e->getMessage()]);
-            $botMessage = $e->getMessage();
+            $errorMessage = $e->getMessage();
+            if (str_contains($errorMessage, '429') || str_contains(strtoupper($errorMessage), 'RESOURCE_EXHAUSTED')) {
+                $botMessage = 'Demasiadas personas están usando el asistente justo ahora y hemos alcanzado el límite temporal. Por favor, espera unos segundos e intenta nuevamente.';
+            } else {
+                $botMessage = 'Lo siento, ocurrió un error inesperado al consultar la IA. Intenta de nuevo en unos momentos.';
+            }
         }
 
         // Guardar respuesta del bot
@@ -146,7 +151,12 @@ class ConversationController extends Controller
             $botMessage = $aiService->generateContent($history, true);
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('AI Service error on Voice', ['chat_id' => $chatId, 'error' => $e->getMessage()]);
-            $botMessage = 'Lo siento, ocurrió un error al consultar la IA. Intenta de nuevo.';
+            $errorMessage = $e->getMessage();
+            if (str_contains($errorMessage, '429') || str_contains(strtoupper($errorMessage), 'RESOURCE_EXHAUSTED')) {
+                $botMessage = 'El asistente está sobrecargado en este instante. Espera unos segundos y vuelve a intentarlo.';
+            } else {
+                $botMessage = 'Lo siento, ocurrió un error al consultar la IA. Intenta de nuevo.';
+            }
         }
 
         // Guardar respuesta del bot
