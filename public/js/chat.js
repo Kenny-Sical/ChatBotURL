@@ -147,7 +147,11 @@
         scrollToBottom();
 
         try {
-            const res = await fetchJSON('/chat/' + activeChatId + '/message', 'POST', { message: text });
+            const selectedModel = document.getElementById('modelSelector') ? document.getElementById('modelSelector').value : 'vertex';
+            const res = await fetchJSON('/chat/' + activeChatId + '/message', 'POST', { 
+                message: text,
+                model: selectedModel 
+            });
 
             // Si el título cambió (primer mensaje), actualizar en UI
             if (res.is_first) {
@@ -301,6 +305,9 @@
 
         const formData = new FormData();
         formData.append('audio', audioBlob, 'voice.webm');
+        
+        const selectedModel = document.getElementById('modelSelector') ? document.getElementById('modelSelector').value : 'vertex';
+        formData.append('model', selectedModel);
 
         try {
             const res = await fetch('/chat/' + activeChatId + '/voice-message', {
