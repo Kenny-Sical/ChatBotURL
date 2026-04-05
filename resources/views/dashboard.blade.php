@@ -443,6 +443,60 @@
             color: #a0b4cc;
         }
 
+        .btn-attach {
+            background-color: transparent;
+            border: none;
+            color: #7fa5d7;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+            transition: color 0.2s ease;
+        }
+
+        .btn-attach:hover:not(:disabled) {
+            color: #2873b8;
+        }
+
+        .attachment-preview {
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            background-color: #eef3fb;
+            border: 1px solid #cfd9e7;
+            padding: 0.35rem 0.65rem;
+            border-radius: 0.5rem;
+            font-size: 0.8rem;
+            color: #2873b8;
+            margin-bottom: 0.5rem;
+            width: max-content;
+            max-width: 100%;
+        }
+
+        .attachment-preview.show {
+            display: flex;
+        }
+
+        .attachment-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .btn-remove-attachment {
+            background: none;
+            border: none;
+            color: #dc3545;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            padding: 0;
+            cursor: pointer;
+        }
+
         .btn-send {
             background-color: #2873b8;
             border: none;
@@ -816,11 +870,20 @@
 
         <!-- Input de texto -->
         <div class="chat-input-area">
+            <div id="attachmentPreview" class="attachment-preview">
+                <i class="bi bi-file-earmark-text"></i>
+                <span id="attachmentName" class="attachment-name">archivo.pdf</span>
+                <button type="button" id="btnRemoveAttachment" class="btn-remove-attachment" title="Quitar archivo"><i class="bi bi-x-circle-fill"></i></button>
+            </div>
             <div class="chat-input-box">
+                <input type="file" id="fileAttach" accept=".txt,.json,.pdf,.docx" style="display: none;">
+                <button class="btn-attach" id="btnAttach" type="button" title="Adjuntar archivo">
+                    <i class="bi bi-paperclip"></i>
+                </button>
                 <textarea
                     id="chatInput"
                     rows="1"
-                    placeholder="Escribe tu mensaje o usa el micrófono…"
+                    placeholder="Escribe tu mensaje, usa el micrófono o adjunta un archivo…"
                     disabled
                 ></textarea>
                 <button class="btn-voice" id="btnVoice" type="button" disabled title="Hablar / Detener grabación">
