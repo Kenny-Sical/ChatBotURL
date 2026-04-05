@@ -36,21 +36,70 @@ class ConversationController extends Controller
             ->firstOrFail();
 
         $request->validate([
-            'message' => ['required', 'string', 'max:4000'],
+            'message' => ['nullable', 'string', 'max:4000'],
+            'file'    => ['nullable', 'file', 'mimes:txt,json,pdf,docx', 'max:10240'],
         ]);
+
+        if (!$request->filled('message') && !$request->hasFile('file')) {
+            return response()->json(['error' => 'Debes enviar un mensaje o un archivo.'], 400);
+        }
+
+        $extractedText = '';
+        $hasAttachment = false;
+        $dbMessage = trim($request->input('message', ''));
+
+        if ($request->hasFile('file')) {
+            $hasAttachment = true;
+            $file = $request->file('file');
+            $extension = strtolower($file->getClientOriginalExtension());
+            $path = $file->getRealPath();
+
+            if (empty($dbMessage)) {
+                $dbMessage = 'Archivo adjunto: ' . $file->getClientOriginalName();
+            }
+
+            try {
+                if (in_array($extension, ['txt', 'json'])) {
+                    $extractedText = file_get_contents($path);
+                } elseif ($extension === 'pdf') {
+                    $parser = new \Smalot\PdfParser\Parser();
+                    $pdf = $parser->parseFile($path);
+                    $extractedText = $pdf->getText();
+                } elseif ($extension === 'docx') {
+                    $phpWord = \PhpOffice\PhpWord\IOFactory::load($path);
+                    foreach ($phpWord->getSections() as $section) {
+                        foreach ($section->getElements() as $element) {
+                            if (method_exists($element, 'getText')) {
+                                $extractedText .= $element->{'getText'}() . "\n";
+                            } elseif (method_exists($element, 'getElements')) {
+                                foreach ($element->{'getElements'}() as $innerElement) {
+                                    if (method_exists($innerElement, 'getText')) {
+                                        $extractedText .= $innerElement->{'getText'}() . "\n";
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('File parse error', ['error' => $e->getMessage()]);
+                return response()->json(['error' => 'No se pudo leer el contenido del archivo adjunto.'], 500);
+            }
+        }
 
         // Guardar mensaje del usuario
         Conversation::create([
             'chat_id' => $chat->id,
-            'message' => $request->input('message'),
+            'message' => $dbMessage,
             'type'    => 'user',
+            'has_attachment' => $hasAttachment,
         ]);
 
         // Si es el primer mensaje, usar las primeras palabras como título del chat
         $isFirst = Conversation::where('chat_id', $chat->id)->count() === 1;
         if ($isFirst) {
             $chat->update([
-                'title' => mb_substr($request->input('message'), 0, 60),
+                'title' => mb_substr($dbMessage, 0, 60),
             ]);
         }
 
@@ -63,6 +112,12 @@ class ConversationController extends Controller
                 'content' => $c->message,
             ])
             ->toArray();
+
+        // Inyectar el contenido del archivo solo en la petición actual al LLM
+        if ($hasAttachment && !empty(trim($extractedText))) {
+            $lastIndex = count($history) - 1;
+            $history[$lastIndex]['content'] .= "\n\n[CONTENIDO DEL DOCUMENTO ADJUNTO PARA ANALIZAR]\n" . $extractedText;
+        }
 
         try {
             $modelType = $request->input('model', 'vertex');
