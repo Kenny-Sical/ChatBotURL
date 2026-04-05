@@ -23,6 +23,12 @@
     const voiceHelpText   = document.getElementById('voiceHelpText');
     const bigMicIcon      = document.getElementById('bigMicIcon');
 
+    const btnAttach       = document.getElementById('btnAttach');
+    const fileAttach      = document.getElementById('fileAttach');
+    const attachmentPreview = document.getElementById('attachmentPreview');
+    const attachmentName  = document.getElementById('attachmentName');
+    const btnRemoveAttachment = document.getElementById('btnRemoveAttachment');
+
     const CSRF  = document.querySelector('meta[name="csrf-token"]').content;
 
     // ── Estado de la sesión ────────────────────────────────────────────────────
@@ -109,8 +115,32 @@
     chatInput.addEventListener('input', function () {
         this.style.height = 'auto';
         this.style.height = Math.min(this.scrollHeight, 140) + 'px';
-        btnSend.disabled  = this.value.trim() === '' || waitingForBot;
+        const hasFile = fileAttach && fileAttach.files.length > 0;
+        btnSend.disabled  = (this.value.trim() === '' && !hasFile) || waitingForBot;
     });
+
+    // ── Adjuntar Archivo ───────────────────────────────────────────────────────
+    if (btnAttach) {
+        btnAttach.addEventListener('click', () => fileAttach.click());
+        
+        fileAttach.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                const file = this.files[0];
+                attachmentName.textContent = file.name;
+                attachmentPreview.classList.add('show');
+                btnSend.disabled = false;
+            } else {
+                attachmentPreview.classList.remove('show');
+                btnSend.disabled = chatInput.value.trim() === '';
+            }
+        });
+
+        btnRemoveAttachment.addEventListener('click', () => {
+            fileAttach.value = '';
+            attachmentPreview.classList.remove('show');
+            btnSend.disabled = chatInput.value.trim() === '';
+        });
+    }
 
     // ── Enviar con Enter (Shift+Enter = nueva línea) ───────────────────────────
     chatInput.addEventListener('keydown', function (e) {
@@ -125,7 +155,9 @@
     // ── Enviar mensaje ─────────────────────────────────────────────────────────
     async function sendMessage() {
         const text = chatInput.value.trim();
-        if (!text || waitingForBot) return;
+        const hasFile = fileAttach && fileAttach.files.length > 0;
+
+        if ((!text && !hasFile) || waitingForBot) return;
 
         // Si no hay chat activo, crear uno antes de enviar
         if (!activeChatId) {
@@ -134,13 +166,29 @@
 
         // Mostrar burbuja del usuario de inmediato
         chatEmpty.style.display = 'none';
-        appendMessage('user', text);
+        
+        let displayHtml = text;
+        if (hasFile) {
+            const fileName = fileAttach.files[0].name;
+            const fileBadge = `<div style="opacity:0.8; font-size:0.8rem; margin-top: ${text ? '0.5rem' : '0'}"><i class="bi bi-paperclip"></i> ${escapeHtml(fileName)}</div>`;
+            displayHtml = escapeHtml(text) + fileBadge;
+        } else {
+            displayHtml = escapeHtml(text);
+        }
+        
+        appendMessage('user', displayHtml, true); // usar true para inyectar como HTML dado el fileBadge
 
-        // Limpiar input
+        // Preparar archivo
+        let file = hasFile ? fileAttach.files[0] : null;
+
+        // Limpiar input y adjuntos
         chatInput.value        = '';
         chatInput.style.height = 'auto';
         chatInput.disabled     = true;
         btnSend.disabled       = true;
+        btnAttach.disabled     = true;
+        if (fileAttach) fileAttach.value = '';
+        if (attachmentPreview) attachmentPreview.classList.remove('show');
         waitingForBot          = true;
 
         showTypingIndicator();
@@ -148,10 +196,32 @@
 
         try {
             const selectedModel = document.getElementById('modelSelector') ? document.getElementById('modelSelector').value : 'vertex';
-            const res = await fetchJSON('/chat/' + activeChatId + '/message', 'POST', { 
-                message: text,
-                model: selectedModel 
-            });
+            
+            let res;
+            if (hasFile) {
+                // Si hay archivo usamos FormData en lugar de fetchJSON básico
+                const formData = new FormData();
+                formData.append('message', text);
+                formData.append('model', selectedModel);
+                formData.append('file', file);
+                
+                const fetchRes = await fetch('/chat/' + activeChatId + '/message', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': CSRF,
+                        'Accept': 'application/json',
+                    },
+                    body: formData
+                });
+                if (!fetchRes.ok) throw new Error('HTTP ' + fetchRes.status);
+                res = await fetchRes.json();
+            } else {
+                // Si solo es texto, fetchJSON (json plano)
+                res = await fetchJSON('/chat/' + activeChatId + '/message', 'POST', { 
+                    message: text,
+                    model: selectedModel 
+                });
+            }
 
             // Si el título cambió (primer mensaje), actualizar en UI
             if (res.is_first) {
@@ -165,11 +235,13 @@
             appendMessage('bot', res.bot_message);
             scrollToBottom();
             chatInput.disabled = false;
+            if (btnAttach) btnAttach.disabled = false;
             chatInput.focus();
         } catch {
             removeTypingIndicator();
             waitingForBot     = false;
             chatInput.disabled = false;
+            btnAttach.disabled = false;
             showErrorBubble('Error al enviar el mensaje. Verifica tu conexión.');
         }
     }
@@ -298,6 +370,7 @@
         chatInput.disabled     = true;
         btnSend.disabled       = true;
         btnVoice.disabled      = true;
+        if (btnAttach) btnAttach.disabled = true;
         waitingForBot          = true;
 
         showTypingIndicator();
@@ -336,6 +409,7 @@
             
             chatInput.disabled = false;
             btnVoice.disabled = false;
+            if (btnAttach) btnAttach.disabled = false;
             chatInput.focus();
 
             playTTS(data.bot_message);
@@ -345,6 +419,7 @@
             waitingForBot     = false;
             chatInput.disabled = false;
             btnVoice.disabled = false;
+            if (btnAttach) btnAttach.disabled = false;
             
             if (isModalOpen) {
                 resetModalUI();
@@ -415,7 +490,7 @@
         btnSend.disabled = true;
     }
 
-    function appendMessage(role, content) {
+    function appendMessage(role, content, isHtml = false) {
         chatEmpty.style.display = 'none';
 
         const row = document.createElement('div');
@@ -432,7 +507,8 @@
         if (role === 'bot') {
             bubble.innerHTML = marked.parse(content);
         } else {
-            bubble.textContent = content;
+            if (isHtml) bubble.innerHTML = content;
+            else bubble.textContent = content;
         }
 
         row.appendChild(avatar);
