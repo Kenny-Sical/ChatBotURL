@@ -2,32 +2,26 @@
 
 namespace App\Services;
 
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
+use Resend;
+use Exception;
+use Illuminate\Support\Facades\Log;
 
 class EmailService
 {
-    private string $host;
-    private int    $port;
-    private string $username;
-    private string $password;
-    private string $encryption;
+    private string $apiKey;
     private string $fromAddress;
     private string $fromName;
 
     public function __construct()
     {
-        $this->host        = config('mail.mailers.smtp.host',        env('MAIL_HOST', '127.0.0.1'));
-        $this->port        = (int) config('mail.mailers.smtp.port',  env('MAIL_PORT', 587));
-        $this->username    = config('mail.mailers.smtp.username',     env('MAIL_USERNAME', ''));
-        $this->password    = config('mail.mailers.smtp.password',     env('MAIL_PASSWORD', ''));
-        $this->encryption  = config('mail.mailers.smtp.encryption',  env('MAIL_ENCRYPTION', 'tls'));
-        $this->fromAddress = config('mail.from.address',             env('MAIL_FROM_ADDRESS', 'no-reply@example.com'));
-        $this->fromName    = config('mail.from.name',                env('MAIL_FROM_NAME', config('app.name')));
+        // Resend API key instead of SMTP credentials
+        $this->apiKey      = env('RESEND_API_KEY', '');
+        $this->fromAddress = config('mail.from.address', env('MAIL_FROM_ADDRESS', 'onboarding@resend.dev'));
+        $this->fromName    = config('mail.from.name', env('MAIL_FROM_NAME', config('app.name')));
     }
 
     /**
-     * Envía un correo electrónico en formato HTML.
+     * Envía un correo electrónico en formato HTML usando la API HTTP de Resend.
      *
      * @param  string  $htmlBody   Contenido HTML del correo.
      * @param  string  $subject    Asunto del correo.
@@ -37,34 +31,30 @@ class EmailService
      */
     public function send(string $htmlBody, string $subject, string $to, string $replyTo = ''): object
     {
-        $mail = new PHPMailer(true);
-
         try {
-            // Servidor SMTP
-            $mail->isSMTP();
-            $mail->Host       = $this->host;
-            $mail->SMTPAuth   = true;
-            $mail->Username   = $this->username;
-            $mail->Password   = $this->password;
-            $mail->SMTPSecure = $this->encryption;
-            $mail->Port       = $this->port;
-            $mail->CharSet    = 'UTF-8';
+            if (empty($this->apiKey)) {
+                throw new Exception('Asegúrate de agregar RESEND_API_KEY a tu archivo .env');
+            }
 
-            // Remitente y destinatario
-            $mail->setFrom($this->fromAddress, $this->fromName);
-            $mail->addAddress($to);
-            $mail->addReplyTo($replyTo ?: $this->fromAddress, $this->fromName);
+            $resend = Resend::client($this->apiKey);
 
-            // Contenido
-            $mail->isHTML(true);
-            $mail->Subject = mb_convert_encoding($subject, 'UTF-8');
-            $mail->Body    = $htmlBody;
-            $mail->AltBody = strip_tags($htmlBody);
+            $payload = [
+                'from'    => $this->fromName . ' <' . $this->fromAddress . '>',
+                'to'      => $to,
+                'subject' => $subject,
+                'html'    => $htmlBody,
+            ];
 
-            $mail->send();
+            if (!empty($replyTo)) {
+                $payload['reply_to'] = $replyTo;
+            }
 
-            return (object) ['valid' => true,  'message' => 'Correo enviado correctamente.'];
-        } catch (Exception $e) {
+            $resend->emails->send($payload);
+
+            return (object) ['valid' => true,  'message' => 'Correo enviado correctamente por Resend.'];
+
+        } catch (\Throwable $e) {
+            Log::error('Resend Error: ' . $e->getMessage());
             return (object) ['valid' => false, 'message' => $e->getMessage()];
         }
     }

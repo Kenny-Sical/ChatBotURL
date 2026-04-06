@@ -13,6 +13,7 @@
         "phpmailer/phpmailer": "^7.0",
         "phpoffice/phpword": "^1.4",
         "pusher/pusher-php-server": "^7.2",
+        "resend/resend-php": "*",
         "smalot/pdfparser": "^2.12"
     },
     "require-dev": {
