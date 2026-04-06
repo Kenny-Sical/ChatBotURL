@@ -121,11 +121,16 @@ class LoginController extends Controller
             'resetUrl' => $resetUrl,
         ])->render();
         $emailService = new EmailService();
-        $emailService->send(
+        $resultadoEnvio = $emailService->send(
             htmlBody: $htmlBody,
             subject:  'Recuperación de contraseña — ' . config('app.name'),
             to:       $user->email
         );
+
+        if (!$resultadoEnvio->valid) {
+            \Illuminate\Support\Facades\Log::error('SMTP Falló: ' . $resultadoEnvio->message);
+            return back()->withErrors(['email' => 'Fallo al conectar con el servidor de correos: ' . $resultadoEnvio->message]);
+        }
 
         return back()->with('status', $successMessage);
     }
