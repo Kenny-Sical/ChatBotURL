@@ -64,7 +64,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Symbolic Links
+    | 
     |--------------------------------------------------------------------------
     |
     | Here you may configure the symbolic links that will be created when the
