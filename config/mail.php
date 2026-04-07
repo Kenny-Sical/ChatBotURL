@@ -4,7 +4,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Default Mailer
+    | Default 
     |--------------------------------------------------------------------------
     |
     | This option controls the default mailer that is used to send all email

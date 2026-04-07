@@ -8,17 +8,17 @@
 
 ---
 
-## ✨ Características Principales
+## Características Principales
 
-- 🤖 **Motor de Inteligencia Artificial Avanzado**: Integrado nativamente con los modelos fine-tuned de **Google Vertex AI** (`gemini-2.5-flash-lite`).
-- 🎙️ **Interacción por Voz Real**: Conversa con tu asistente sin tocar el teclado.
+- **Motor de Inteligencia Artificial Avanzado**: Integrado nativamente con los modelos fine-tuned de **Google Vertex AI** (`gemini-2.5-flash-lite`).
+- **Interacción por Voz Real**: Conversa con tu asistente sin tocar el teclado.
     - Capta audio en vivo y utiliza **Groq API (Whisper)** para una transcripción increíblemente veloz.
     - El asistente te responderá de vuelta y de viva voz usando **Web Speech API**.
-- 🖥️ **Interfaz Inmersiva "Premium"**: Implementa principios de _Glassmorphism_ y modales responsivos con latidos fluidos para representar el estado del procesamiento cognitivo (Escuchando > Pensando > Hablando).
-- 🧩 **Conciencia de Contexto Asertiva (Few-Shot Bypass)**: Entiende la diferencia en tu estilo de interacción. Si escribes por chat, arrojará ejemplos ricos y Markdown de pseudocódigo. Si le hablas, te contestará de forma directa, corta y amigable al oído.
-- 📱 **100% Responsivo**: Diseñado para móviles y pantallas grandes con un panel lateral colapsable nativo.
+- **Interfaz Inmersiva "Premium"**: Implementa principios de _Glassmorphism_ y modales responsivos con latidos fluidos para representar el estado del procesamiento cognitivo (Escuchando > Pensando > Hablando).
+- **Conciencia de Contexto Asertiva (Few-Shot Bypass)**: Entiende la diferencia en tu estilo de interacción. Si escribes por chat, arrojará ejemplos ricos y Markdown de pseudocódigo. Si le hablas, te contestará de forma directa, corta y amigable al oído.
+- **100% Responsivo**: Diseñado para móviles y pantallas grandes con un panel lateral colapsable nativo.
 
-## 🛠️ Tecnologías Empleadas
+## Tecnologías Empleadas
 
 - **Framework Backend:** Laravel 10/11 (PHP 8.2+)
 - **Base de Datos:** MySQL / MariaDB
@@ -29,7 +29,7 @@
 
 ---
 
-## ⚙️ Requisitos Previos
+## Requisitos Previos
 
 Antes de instalar este proyecto en tu entorno local, asegúrate de tener instalado:
 
@@ -41,7 +41,7 @@ Antes de instalar este proyecto en tu entorno local, asegúrate de tener instala
 
 ---
 
-## 🚀 Instalación Rápida Local
+## Instalación Rápida Local
 
 Sigue estos pasos para arrancar el ChatBot IA en tu propio ordenador:
 
